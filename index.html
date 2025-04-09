@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>太阳系模拟</title>
+  <style>
+    canvas {
+      border: 1px solid #333;
+      background: #000;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #1a1a1a;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="solarSystem"></canvas>
+  <script>
+    const canvas = document.getElementById('solarSystem');
+    const ctx = canvas.getContext('2d');
+
+    // 设置画布尺寸
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // 天体对象
+    const celestialBodies = {
+      sun: {
+        radius: 30,
+        color: '#ffd700',
+        satellites: []
+      },
+      earth: {
+        radius: 10,
+        color: '#4169E1',
+        orbitRadius: 150,
+        speed: 0.01,
+        angle: 0,
+        satellites: []
+      },
+      moon: {
+        radius: 4,
+        color: '#888',
+        orbitRadius: 30,
+        speed: 0.03,
+        angle: 0,
+        satellites: []
+      }
+    };
+
+    // 初始化地球的卫星（月球）
+    celestialBodies.earth.satellites.push(celestialBodies.moon);
+
+    // 动画循环
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 绘制太阳
+      drawBody(canvas.width / 2, canvas.height / 2, celestialBodies.sun);
+
+      // 更新并绘制地球
+      updateBody(celestialBodies.earth);
+
+      // 更新并绘制月球
+      updateSatellites(celestialBodies.earth);
+
+      requestAnimationFrame(animate);
+    }
+
+    // 更新天体位置
+    function updateBody(body) {
+      body.angle += body.speed;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      body.x = centerX + Math.cos(body.angle) * body.orbitRadius;
+      body.y = centerY + Math.sin(body.angle) * body.orbitRadius;
+
+      drawBody(body.x, body.y, body);
+    }
+
+    // 更新卫星
+    function updateSatellites(parentBody) {
+      parentBody.satellites.forEach(satellite => {
+        satellite.angle += satellite.speed;
+
+        satellite.x = parentBody.x + Math.cos(satellite.angle) * satellite.orbitRadius;
+        satellite.y = parentBody.y + Math.sin(satellite.angle) * satellite.orbitRadius;
+
+        drawBody(satellite.x, satellite.y, satellite);
+
+        // 绘制轨道
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.arc(parentBody.x, parentBody.y, satellite.orbitRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+
+    // 绘制天体和轨道
+    function drawBody(x, y, body) {
+      // 绘制轨道
+      if (body.orbitRadius) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.arc(canvas.width / 2, canvas.height / 2, body.orbitRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // 绘制天体
+      ctx.beginPath();
+      ctx.fillStyle = body.color;
+      ctx.arc(x, y, body.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 启动动画
+    animate();
+
+    // 可选：添加缩放控制
+    let scale = 1;
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      scale += e.deltaY * -0.001;
+      scale = Math.min(Math.max(1, scale), 5);
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    });
+  </script>
+</body>
+
+</html>
